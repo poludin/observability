@@ -1,16 +1,15 @@
 CLUSTER_NAME=obs
-NAMESPACE=microservices-demo
+NAMESPACE=demo-app
 
-# Развертывание демо-приложения через Helm
 app-deploy:
-	helm upgrade --install onlineboutique oci://us-docker.pkg.dev/online-boutique-ci/charts/onlineboutique \
-		--namespace $(NAMESPACE) --create-namespace
+	kubectl create namespace $(NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
+	kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/main/release/kubernetes-manifests.yaml -n $(NAMESPACE)
 
-# Проброс порта для проверки работы магазина
+# Проброс порта
 app-port-forward:
 	kubectl port-forward svc/frontend -n $(NAMESPACE) 8080:80
 
-# Полная очистка приложения (пригодится для тестов)
+# Полная очистка
 app-clean:
-	helm uninstall onlineboutique -n $(NAMESPACE)
+	kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/main/release/kubernetes-manifests.yaml -n $(NAMESPACE)
 	kubectl delete namespace $(NAMESPACE)
