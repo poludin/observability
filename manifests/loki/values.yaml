@@ -4,11 +4,20 @@ loki:
   storage:
     type: filesystem
   auth_enabled: false
-# Отключаем микросервисный режим, запускаем монолит
+
 deploymentMode: SingleBinary
+
 singleBinary:
   replicas: 1
-# Отключаем встроенные агенты сбора (мы будем использовать Alloy)
+
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
+
+# Отключаем встроенный сборщик, так как будем использовать Alloy
 promtail:
   enabled: false
 
