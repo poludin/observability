@@ -1,15 +1,17 @@
 grafana:
   adminPassword: "admin"
-  # Включаем автоматический поиск дашбордов
   sidecar:
     dashboards:
       enabled: true
       label: grafana_dashboard
       labelValue: "1"
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki:3100
+      access: proxy
+      isDefault: false
 
 prometheus:
   prometheusSpec:
-    # Говорим Прометею искать ServiceMonitor'ы во всех неймспейсах
     serviceMonitorSelectorNilUsesHelmValues: false
-
-    
