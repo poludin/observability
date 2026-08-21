@@ -1,7 +1,7 @@
 alloy:
   configMap:
     content: |
-      // --- 1. ЛОГИ: Парсинг K8s лейблов ---
+      // --- 1. ЛОГИ ---
       discovery.kubernetes "pods" {
         role = "pod"
       }
@@ -9,13 +9,12 @@ alloy:
       discovery.relabel "pods" {
         targets = discovery.kubernetes.pods.targets
         
-        // Извлекаем неймспейс
+        // Оставляем логи ТОЛЬКО из нашего неймспейса
         rule {
           source_labels = ["__meta_kubernetes_namespace"]
-          action = "replace"
-          target_label = "namespace"
+          action = "keep"
+          regex = "demo-app"
         }
-        // Извлекаем лейбл app
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app"]
           action = "replace"
@@ -34,18 +33,16 @@ alloy:
         }
       }
 
-      // --- 2. МЕТРИКИ: Приемник OpenTelemetry ---
+      // --- 2. МЕТРИКИ ---
       otelcol.receiver.otlp "default" {
         grpc { endpoint = "0.0.0.0:4317" }
         http { endpoint = "0.0.0.0:4318" }
         
         output {
           metrics = [otelcol.exporter.prometheus "default".input]
-          // Трейсы добавим сюда же на следующем этапе!
         }
       }
 
-      // Конвертируем OTLP в формат Prometheus и пушим в БД
       otelcol.exporter.prometheus "default" {
         forward_to = [prometheus.remote_write.local.receiver]
       }
