@@ -1,0 +1,15 @@
+grafana:
+  adminPassword: "admin"
+  # Включаем автоматический поиск дашбордов
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+
+prometheus:
+  prometheusSpec:
+    # Говорим Прометею искать ServiceMonitor'ы во всех неймспейсах
+    serviceMonitorSelectorNilUsesHelmValues: false
+
+    
