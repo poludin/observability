@@ -15,3 +15,4 @@ grafana:
 prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
+    enableRemoteWriteReceiver: true

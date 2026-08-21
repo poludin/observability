@@ -1,19 +1,58 @@
 alloy:
   configMap:
     content: |
-      // 1. Находим все поды на текущей ноде Kubernetes
+      // --- 1. ЛОГИ: Парсинг K8s лейблов ---
       discovery.kubernetes "pods" {
         role = "pod"
       }
-      // 2. Читаем логи из найденных подов
+
+      discovery.relabel "pods" {
+        targets = discovery.kubernetes.pods.targets
+        
+        // Извлекаем неймспейс
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          action = "replace"
+          target_label = "namespace"
+        }
+        // Извлекаем лейбл app
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app"]
+          action = "replace"
+          target_label = "app"
+        }
+      }
+
       loki.source.kubernetes "local_pods" {
-        targets    = discovery.kubernetes.pods.targets
+        targets    = discovery.relabel.pods.output
         forward_to = [loki.write.local.receiver]
       }
-      // 3. Отправляем собранные логи в базу данных Loki
+
       loki.write "local" {
         endpoint {
           url = "http://loki:3100/loki/api/v1/push"
         }
       }
 
+      // --- 2. МЕТРИКИ: Приемник OpenTelemetry ---
+      otelcol.receiver.otlp "default" {
+        grpc { endpoint = "0.0.0.0:4317" }
+        http { endpoint = "0.0.0.0:4318" }
+        
+        output {
+          metrics = [otelcol.exporter.prometheus "default".input]
+          // Трейсы добавим сюда же на следующем этапе!
+        }
+      }
+
+      // Конвертируем OTLP в формат Prometheus и пушим в БД
+      otelcol.exporter.prometheus "default" {
+        forward_to = [prometheus.remote_write.local.receiver]
+      }
+
+      prometheus.remote_write "local" {
+        endpoint {
+          url = "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+        }
+      }
+      
