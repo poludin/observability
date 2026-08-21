@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: online-boutique-monitor
+  namespace: monitoring
+  labels:
+    # Prometheus Operator ищет ServiceMonitor'ы именно по этому лейблу
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - demo-app
+  selector:
+    # Собираем метрики со всех сервисов, у которых есть лейбл app
+    matchExpressions:
+      - key: app
+        operator: Exists
+  endpoints:
+    # Имя порта из Service микросервисов демо-приложения
+    - port: metrics 
+      path: /metrics
+      interval: 15s
+
+      
