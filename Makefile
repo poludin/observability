@@ -28,4 +28,21 @@ prometheus-deploy: prometheus-repo
 
 prometheus-port-forward:
 	kubectl port-forward svc/prometheus-grafana -n monitoring 3000:80
-	
+
+
+# --- Логи и Alloy ---
+
+grafana-repo:
+	helm repo add grafana https://grafana.github.io/helm-charts
+	helm repo update
+
+loki-deploy: grafana-repo
+	helm upgrade --install loki grafana/loki \
+		--namespace monitoring \
+		-f manifests/loki/values.yaml
+
+alloy-deploy: grafana-repo
+	helm upgrade --install alloy grafana/alloy \
+		--namespace monitoring \
+		-f manifests/alloy/values.yaml
+		
