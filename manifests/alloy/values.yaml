@@ -9,7 +9,6 @@ alloy:
       discovery.relabel "pods" {
         targets = discovery.kubernetes.pods.targets
         
-        // Оставляем логи ТОЛЬКО из нашего неймспейса
         rule {
           source_labels = ["__meta_kubernetes_namespace"]
           action = "keep"
@@ -39,7 +38,8 @@ alloy:
         http { endpoint = "0.0.0.0:4318" }
         
         output {
-          metrics = [otelcol.exporter.prometheus "default".input]
+          // ИСПРАВЛЕНО: убрали кавычки у слова default
+          metrics = [otelcol.exporter.prometheus.default.input]
         }
       }
 
@@ -52,4 +52,5 @@ alloy:
           url = "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
         }
       }
+
       
