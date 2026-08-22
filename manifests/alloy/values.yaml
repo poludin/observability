@@ -8,7 +8,6 @@ alloy:
 
       discovery.relabel "pods" {
         targets = discovery.kubernetes.pods.targets
-        
         rule {
           source_labels = ["__meta_kubernetes_namespace"]
           action = "keep"
@@ -32,13 +31,11 @@ alloy:
         }
       }
 
-      // --- 2. МЕТРИКИ ---
+      // --- 2. МЕТРИКИ (PUSH) ---
       otelcol.receiver.otlp "default" {
         grpc { endpoint = "0.0.0.0:4317" }
         http { endpoint = "0.0.0.0:4318" }
-        
         output {
-          // ИСПРАВЛЕНО: убрали кавычки у слова default
           metrics = [otelcol.exporter.prometheus.default.input]
         }
       }
@@ -53,4 +50,16 @@ alloy:
         }
       }
 
+      // --- 3. МЕТРИКИ (PULL: Принудительный сбор) ---
+      discovery.kubernetes "demo_pods" {
+        role = "pod"
+        namespaces {
+          names = ["demo-app"]
+        }
+      }
+
+      prometheus.scrape "demo_scraper" {
+        targets    = discovery.kubernetes.demo_pods.targets
+        forward_to = [prometheus.remote_write.local.receiver]
+      }
       
