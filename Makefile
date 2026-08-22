@@ -45,4 +45,12 @@ alloy-deploy: grafana-repo
 	helm upgrade --install alloy grafana/alloy \
 		--namespace monitoring \
 		-f manifests/alloy/values.yaml
+
+
+# --- Tempo ---
+
+tempo-deploy: grafana-repo
+	helm upgrade --install tempo grafana/tempo \
+		--namespace monitoring \
+		-f manifests/tempo/values.yaml
 		

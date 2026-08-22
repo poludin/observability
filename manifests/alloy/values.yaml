@@ -1,7 +1,7 @@
 alloy:
   configMap:
     content: |
-      // --- 1. ЛОГИ ---
+      // --- 1. ЛОГИ (Loki) ---
       discovery.kubernetes "pods" {
         role = "pod"
       }
@@ -31,15 +31,18 @@ alloy:
         }
       }
 
-      // --- 2. МЕТРИКИ (PUSH) ---
+      // --- 2. МЕТРИКИ И ТРЕЙСЫ (Приемник OTLP) ---
       otelcol.receiver.otlp "default" {
         grpc { endpoint = "0.0.0.0:4317" }
         http { endpoint = "0.0.0.0:4318" }
+        
         output {
           metrics = [otelcol.exporter.prometheus.default.input]
+          traces  = [otelcol.exporter.otlp.tempo.input] // Открыли клапан для трейсов
         }
       }
 
+      // Экспорт метрик в Prometheus
       otelcol.exporter.prometheus "default" {
         forward_to = [prometheus.remote_write.local.receiver]
       }
@@ -49,3 +52,15 @@ alloy:
           url = "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
         }
       }
+
+      // Экспорт трейсов в Tempo
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo.monitoring.svc.cluster.local:4317"
+          tls {
+            insecure             = true
+            insecure_skip_verify = true
+          }
+        }
+      }
+      
