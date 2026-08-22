@@ -49,17 +49,3 @@ alloy:
           url = "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
         }
       }
-
-      // --- 3. МЕТРИКИ (PULL: Принудительный сбор) ---
-      discovery.kubernetes "demo_pods" {
-        role = "pod"
-        namespaces {
-          names = ["demo-app"]
-        }
-      }
-
-      prometheus.scrape "demo_scraper" {
-        targets    = discovery.kubernetes.demo_pods.targets
-        forward_to = [prometheus.remote_write.local.receiver]
-      }
-      
