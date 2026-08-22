@@ -31,18 +31,31 @@ alloy:
         }
       }
 
-      // --- 2. МЕТРИКИ И ТРЕЙСЫ (Приемник OTLP) ---
+      // --- 2. ПРИЕМНИК OTLP ---
       otelcol.receiver.otlp "default" {
         grpc { endpoint = "0.0.0.0:4317" }
         http { endpoint = "0.0.0.0:4318" }
         
         output {
           metrics = [otelcol.exporter.prometheus.default.input]
-          traces  = [otelcol.exporter.otlp.tempo.input] // Открыли клапан для трейсов
+          traces  = [
+            otelcol.exporter.otlp.tempo.input,
+            otelcol.connector.spanmetrics.default.input,
+          ]
         }
       }
 
-      // Экспорт метрик в Prometheus
+      // --- 3. ГЕНЕРАТОР МЕТРИК ИЗ ТРЕЙСОВ ---
+      otelcol.connector.spanmetrics "default" {
+        histogram {
+          explicit {}
+        }
+        output {
+          metrics = [otelcol.exporter.prometheus.default.input]
+        }
+      }
+
+      // --- 4. ЭКСПОРТЕРЫ ---
       otelcol.exporter.prometheus "default" {
         forward_to = [prometheus.remote_write.local.receiver]
       }
@@ -53,7 +66,6 @@ alloy:
         }
       }
 
-      // Экспорт трейсов в Tempo
       otelcol.exporter.otlp "tempo" {
         client {
           endpoint = "tempo.monitoring.svc.cluster.local:4317"
@@ -63,4 +75,3 @@ alloy:
           }
         }
       }
-      
