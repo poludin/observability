@@ -32,22 +32,32 @@ alertmanager:
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 1h
-      receiver: 'blackhole' 
-      
+      receiver: 'telegram-oncall' 
       routes:
         - matchers:
             - severity="critical"
-          receiver: 'blackhole'
-          
+          receiver: 'telegram-oncall'
     inhibit_rules:
       - source_matchers:
           - severity="critical"
         target_matchers:
           - severity="warning"
         equal: ['namespace', 'service']
-
     receivers:
       - name: 'blackhole'
+      - name: 'telegram-oncall'
+        telegram_configs:
+          - bot_token: '8304905946:AAEHB-IJ56qewCx96xVBMggAtTu4FDoT8TA'
+            chat_id: 759850364
+            parse_mode: 'HTML'
+            message: |-
+              {{ if eq .Status "firing" }}🔥 <b>СБОЙ (FIRING)</b> 🔥{{ else }}✅ <b>ВОССТАНОВЛЕНО (RESOLVED)</b> ✅{{ end }}
+              <b>Alert:</b> {{ .GroupLabels.alertname }}
+              <b>Service:</b> {{ .GroupLabels.service }}
+              <b>Подробности:</b>
+              {{ range .Alerts }}
+              • {{ .Annotations.summary }}
+              {{ end }}
 
 additionalPrometheusRulesMap:
   online-boutique-rules:
