@@ -23,7 +23,10 @@ prometheus:
     enableRemoteWriteReceiver: true
 
 alertmanager:
-  enabled: true
+  enabled: true  
+  alertmanagerSpec:
+    secrets:
+      - telegram-bot-token
   config:
     global:
       resolve_timeout: 5m
@@ -36,7 +39,7 @@ alertmanager:
       routes:
         - matchers:
             - severity="critical"
-          receiver: 'telegram-oncall'
+          receiver: 'telegram-oncall' 
     inhibit_rules:
       - source_matchers:
           - severity="critical"
@@ -47,7 +50,7 @@ alertmanager:
       - name: 'blackhole'
       - name: 'telegram-oncall'
         telegram_configs:
-          - bot_token: '8304905946:AAEHB-IJ56qewCx96xVBMggAtTu4FDoT8TA'
+          - bot_token_file: '/etc/alertmanager/secrets/telegram-bot-token/token'
             chat_id: 759850364
             parse_mode: 'HTML'
             message: |-
