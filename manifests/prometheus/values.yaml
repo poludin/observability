@@ -30,6 +30,8 @@ alertmanager:
   config:
     global:
       resolve_timeout: 5m
+      http_config:
+        proxy_url: 'proxy_url'
     route:
       group_by: ['namespace', 'alertname', 'service']
       group_wait: 30s
